@@ -33,7 +33,12 @@ function factFactory(name, factTester) {
                 asserts.push({ factName: name, success: true });
             }
         };
-        factTester();
+        try {
+            factTester();
+        }
+        catch(e){
+            asserts.push({ factName: name, success: false, message: "got exception: " + e.message });
+        }
         return asserts;
     }
     return factBoxing;
@@ -99,7 +104,10 @@ function getDetailLevelPrintMessage(proofName, asserts, symbol) {
     let message = proofName + "\n";
     for (let i = 0; i < asserts.length; i++) {
         const assert = asserts[i];
-        message += "\t" + symbol + " " + assert.factName + "\n";
+        message += "\t" + symbol + "\u00A0" + assert.factName + "\n";
+        if(message){
+            message += "\t\t" + assert.message + "\n";
+        }
     }
     return message;
 }
