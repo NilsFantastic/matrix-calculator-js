@@ -1,1 +1,1 @@
-matrix-calculator-js-github
+matrix-calculator-js
