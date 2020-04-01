@@ -1,5 +1,9 @@
 const approvedSymbol = '\u2705';
 const failureSymbol = '\u274C';
+const ignoredSymbol = '\u26A0';
+const successStyle = 'color: green';
+const ignoredStyle = 'color: orange';
+const failureStyle = 'color: red';
 const proofs = [];
 const logger = console;
 const proofPrintLevel = {
@@ -8,6 +12,7 @@ const proofPrintLevel = {
 }
 const successPrintLevel = proofPrintLevel.basic;
 const failurePrintLevel = proofPrintLevel.detail;
+const ignoredPrintLevel = proofPrintLevel.detail;
 function proof(proofName, proofRunner) {
     proofBoxing = function () {
         const facts = [];
@@ -15,7 +20,9 @@ function proof(proofName, proofRunner) {
         this.fact = (name, factTester) => {
             facts.push(factFactory(name, factTester));
         };
-        this.xfact = (name) => { /*console.log("xfact", name); */ return () => [{ name: name, ignored: true }] };
+        this.ignore = (name) => {
+            facts.push(() => [{ factName: name, ignored: true }]) 
+        };
         proofRunner();
         return { proofName: proofName, facts: facts }
     };
@@ -75,18 +82,19 @@ function runProof(proofBoxing) {
         }
         printSuccesses(wrapper.proofName, successes);
     }
+    return {failures:failures, successes: successes, ignored: ignored};
 }
 function printFailure(proofName, asserts) {
-    this.print(proofName, asserts, failureSymbol, "red", failurePrintLevel, logger.error)
+    this.print(proofName, asserts, failureSymbol, failureStyle, failurePrintLevel, logger.error)
 }
 function printIgnored(proofName, asserts) {
-    this.print(proofName, asserts, "-", "orange", successPrintLevel, logger.log);
+    this.print(proofName, asserts, ignoredSymbol, ignoredStyle, ignoredPrintLevel, logger.log);
 }
 
 function printSuccesses(proofName, asserts) {
-    this.print(proofName, asserts, approvedSymbol, "green", successPrintLevel, logger.info);
+    this.print(proofName, asserts, approvedSymbol, successStyle, successPrintLevel, logger.info);
 }
-function print(proofName, asserts, symbol, color, printLevel, printFunction) {
+function print(proofName, asserts, symbol, style, printLevel, printFunction) {
     let message;
     if (printLevel === proofPrintLevel.detail) {
         message = getDetailLevelPrintMessage(proofName, asserts, symbol);
@@ -95,7 +103,7 @@ function print(proofName, asserts, symbol, color, printLevel, printFunction) {
         message = getBasicLevelPrintMessage(proofName, asserts, symbol);
     }
 
-    printFunction("%c" + message, "color:" + color);
+    printFunction("%c" + message, style);
 }
 function getBasicLevelPrintMessage(proofName, asserts, symbol) {
     return symbol + ` (${asserts.length}) ` + proofName;
@@ -105,17 +113,38 @@ function getDetailLevelPrintMessage(proofName, asserts, symbol) {
     for (let i = 0; i < asserts.length; i++) {
         const assert = asserts[i];
         message += "\t" + symbol + "\u00A0" + assert.factName + "\n";
-        if(message){
+        if(assert.message){
             message += "\t\t" + assert.message + "\n";
         }
     }
     return message;
 }
+
+function printTestSummary(results){
+    logger.log("\n\n");
+    const singular = 'fact is';
+    const plural = 'facts are';
+    if(results.failures.length > 0){
+        logger.error(`%c ${results.failures.length} ${results.failures.length > 1 ? plural : singular} incorrect`, failureStyle);
+    }
+    else if(results.successes.length > 0){
+        logger.info(`%c ${results.successes.length} ${results.successes.length > 1 ? plural : singular} proven`, successStyle);
+    }
+    if(results.ignored.length > 0){
+        logger.warn(`%c ${results.ignored.length} ${results.ignored.length > 1 ? plural : singular} being ignored `, ignoredStyle);
+    }
+}
+
 function runAllProofs() {
+    const results = {failures:[], successes: [], ignored: []}
     for (let i = 0; i < proofs.length; i++) {
         let proof = proofs[i];
-        runProof(proof);
+        const result = runProof(proof);
+        results.failures = results.failures.concat(result.failures);
+        results.successes = results.successes.concat(result.successes);
+        results.ignored = results.ignored.concat(result.ignored);
     }
+    printTestSummary(results);
 }
 window.addEventListener("load", () => {
     setTimeout(() => runAllProofs(), 50)
