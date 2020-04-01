@@ -61,7 +61,7 @@ proof("MatrixTransformations can scale matrices", () => {
 proof("MatrixTransformations can multiply matrices", () => {
     const matrixTransform = new MatrixTransformation();
 
-    xfact("multiply_2x3A3x2B_shouldGet3x3result", () => {
+    fact("multiply_2x3A3x2B_shouldGet3x3result", () => {
         let a = [
             [1, 2],
             [3, 4],
@@ -80,7 +80,7 @@ proof("MatrixTransformations can multiply matrices", () => {
         assertTrue(matrixTransform.equal(product, expected));
     });
 
-    xfact("multiply_3x2A2x3B_shouldGet2x2result", () => {
+    fact("multiply_3x2A2x3B_shouldGet2x2result", () => {
         let b = [
             [1, 2],
             [3, 4],

@@ -114,14 +114,21 @@ class MatrixTransformation {
         const a = matrixA, b = matrixB;
         const dimA = this.getDimensions(matrixA);
         const dimB = this.getDimensions(matrixB);
-        const width = Math.max(dimA.width, dimB.width);
-        const height = Math.max(dimA.height, dimB.height);
+        let width, height;
+        if(dimA.width > dimB.width){
+            width = Math.min(dimA.width, dimB.width);
+            height = Math.min(dimA.height, dimB.height);
+        }
+        else{
+            width = Math.max(dimA.width, dimB.width);
+            height = Math.max(dimA.height, dimB.height);
+        }
+        
         const result = this.createEmpty(width, height);
         for (let y = 0; y < height; y++) {
             for (let x = 0; x < width; x++) {
                 result[y][x] = 0;
                 for (let k = 0; k < dimA.width; k++) {
-                    console.log(y, x, k)
                     result[y][x] = result[y][x] + a[y][k] * b[k][x];
                 }
             }
